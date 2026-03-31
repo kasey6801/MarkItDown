@@ -51,13 +51,67 @@ codesign --deep --force --sign - "$APP_PATH"
 echo "==> Verifying signature..."
 codesign --verify --deep --strict "$APP_PATH" && echo "    Signature OK"
 
+echo "==> Creating DMG installer..."
+DMG_PATH="dist/${APP_NAME}.dmg"
+DMG_TMP="dist/${APP_NAME}-tmp.dmg"
+DMG_STAGE="dist/dmg-stage"
+
+# Build a staging folder with the app and an Applications symlink
+rm -rf "$DMG_STAGE"
+mkdir -p "$DMG_STAGE"
+cp -R "$APP_PATH" "$DMG_STAGE/"
+ln -s /Applications "$DMG_STAGE/Applications"
+
+# Create a read/write DMG so we can position icons via AppleScript
+hdiutil create \
+    -volname "$APP_NAME" \
+    -srcfolder "$DMG_STAGE" \
+    -ov \
+    -format UDRW \
+    "$DMG_TMP"
+rm -rf "$DMG_STAGE"
+
+# Mount the r/w DMG
+MOUNT_DIR=$(hdiutil attach "$DMG_TMP" -readwrite -noverify -noautoopen | \
+    awk 'END {$1=$2=""; print substr($0,3)}' | xargs)
+
+# Use AppleScript to position the app icon (left) and Applications link (right)
+osascript << APPLESCRIPT
+tell application "Finder"
+    tell disk "$APP_NAME"
+        open
+        set current view of container window to icon view
+        set toolbar visible of container window to false
+        set statusbar visible of container window to false
+        set the bounds of container window to {400, 200, 900, 500}
+        set theViewOptions to the icon view options of container window
+        set arrangement of theViewOptions to not arranged
+        set icon size of theViewOptions to 100
+        set position of item "${APP_NAME}.app" of container window to {150, 150}
+        set position of item "Applications" of container window to {350, 150}
+        close
+        open
+        update without registering applications
+        delay 2
+    end tell
+end tell
+APPLESCRIPT
+
+# Unmount, convert to compressed read-only, clean up
+hdiutil detach "$MOUNT_DIR" -quiet
+hdiutil convert "$DMG_TMP" -format UDZO -o "$DMG_PATH" -ov
+rm -f "$DMG_TMP"
+
 BUNDLE_SIZE=$(du -sh "$APP_PATH" | cut -f1)
+DMG_SIZE=$(du -sh "$DMG_PATH" | cut -f1)
 echo ""
 echo "====================================================="
 echo "  Build complete: $APP_PATH  ($BUNDLE_SIZE)"
+echo "  DMG installer: $DMG_PATH  ($DMG_SIZE)"
 echo "====================================================="
 echo ""
-echo "To test:       open $APP_PATH"
+echo "To test app:   open $APP_PATH"
+echo "To test DMG:   open $DMG_PATH"
 echo ""
 echo "NOTE: On first launch on another Mac, right-click the app"
 echo "      and choose Open, then click Open in the dialog."

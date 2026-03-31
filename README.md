@@ -33,16 +33,18 @@ A self-contained web app built on Microsoft's [MarkItDown](https://github.com/mi
 
 ## Option 1 — Run as a macOS App (recommended)
 
-A pre-built `MarkItDown.app` is included in `dist/`. No Python installation required.
+Download the `MarkItDown.dmg` installer from the [Releases](https://github.com/kasey6801/MarkItDown/releases) page. No Python installation required.
 
 ### Steps
 
-1. Download or clone this repository.
-2. Open `dist/` in Finder.
-3. **Right-click** `MarkItDown.app` → **Open** → click **Open** in the dialog.
+1. Download `MarkItDown.dmg` from the latest release.
+2. Double-click the DMG to open it.
+3. Drag **MarkItDown.app** (left) into the **Applications** folder (right).
+4. Eject the DMG.
+5. Open **Applications** in Finder and **right-click** `MarkItDown.app` → **Open** → click **Open** in the dialog.
    > This one-time step is required because the app is not signed with an Apple Developer ID. After the first launch you can double-click as normal.
-4. Your default browser opens automatically to `http://127.0.0.1:5001`.
-5. To quit, click the **Quit** button in the top-right corner of the UI, or simply close the browser tab — the app exits automatically.
+6. Your default browser opens automatically to `http://127.0.0.1:5001`.
+7. To quit, click the **Quit** button in the top-right corner of the UI, or simply close the browser tab — the app exits automatically.
 
 ### Requirements
 
@@ -140,9 +142,10 @@ The script will:
 2. Clean previous build artifacts
 3. Run PyInstaller with `MarkItDown.spec`
 4. Ad-hoc sign the `.app` bundle
-5. Report the bundle size and location
+5. Create a `MarkItDown.dmg` installer with a drag-to-Applications layout
+6. Report the bundle and DMG size and location
 
-Output: `dist/MarkItDown.app` (~166 MB, all dependencies bundled)
+Output: `dist/MarkItDown.app` (~166 MB) and `dist/MarkItDown.dmg` (~90 MB)
 
 > **First launch on another Mac:** Right-click → Open → Open (one-time Gatekeeper bypass). This is expected for apps without an Apple Developer ID.
 
