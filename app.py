@@ -135,7 +135,7 @@ TROUBLESHOOTING (Windows):
 
 from flask import Flask, request, jsonify, render_template_string
 from markitdown import MarkItDown
-import io, os, signal, time, traceback, threading, webbrowser
+import io, os, time, traceback, threading, webbrowser
 
 # ---------------------------------------------------------------------------
 # App Initialisation
@@ -1065,7 +1065,7 @@ def quit_app():
     def _shutdown():
         import time
         time.sleep(0.3)   # brief delay so the HTTP response reaches the browser
-        os.kill(os.getpid(), signal.SIGTERM)
+        os._exit(0)
     threading.Thread(target=_shutdown, daemon=True).start()
     return jsonify({"status": "bye"})
 
@@ -1115,7 +1115,7 @@ def _watchdog():
     while True:
         _time.sleep(3)
         if _time.monotonic() - _last_heartbeat > 12:
-            os.kill(os.getpid(), signal.SIGTERM)
+            os._exit(0)
             break
 
 
