@@ -1,6 +1,6 @@
 # ⚡ MarkItDown Local Frontend
 
-**v0.42** — Convert documents, PDFs, Office files & more to Markdown — locally.
+**v0.42.1** — Convert documents, PDFs, Office files & more to Markdown — locally.
 
 A self-contained web app built on Microsoft's [MarkItDown](https://github.com/microsoft/markitdown) library. All conversion happens on your machine — no files or URLs are ever sent to an external server.
 
@@ -13,7 +13,8 @@ A self-contained web app built on Microsoft's [MarkItDown](https://github.com/mi
 - **Live Markdown preview** alongside the raw output
 - **Copy to clipboard** or **download as `.md`**
 - **Stats bar** — characters, words, lines, and estimated token range
-- **Quit button** — shuts down the server cleanly from the browser
+- **Quit button** — shuts down the server and shows a clean stopped page
+- **Auto-quit on tab close** — closing the browser tab automatically exits the app
 
 ### Supported formats
 
@@ -41,7 +42,7 @@ A pre-built `MarkItDown.app` is included in `dist/`. No Python installation requ
 3. **Right-click** `MarkItDown.app` → **Open** → click **Open** in the dialog.
    > This one-time step is required because the app is not signed with an Apple Developer ID. After the first launch you can double-click as normal.
 4. Your default browser opens automatically to `http://127.0.0.1:5001`.
-5. To quit, click the **Quit** button in the top-right corner of the UI.
+5. To quit, click the **Quit** button in the top-right corner of the UI, or simply close the browser tab — the app exits automatically.
 
 ### Requirements
 
@@ -96,7 +97,7 @@ python app.py
 
 The app starts a local server and opens `http://127.0.0.1:5001` in your browser automatically.
 
-To stop, click the **Quit** button in the UI, or press `Control + C` in Terminal.
+To stop, click the **Quit** button in the UI, close the browser tab, or press `Control + C` in Terminal.
 
 ### One-time setup (Windows)
 
@@ -152,6 +153,7 @@ Output: `dist/MarkItDown.app` (~166 MB, all dependencies bundled)
 | Problem | Fix |
 |---|---|
 | "Port 5001 already in use" | Run `lsof -ti :5001 \| xargs kill -9` then restart |
+| App didn't quit after closing tab | The watchdog allows 12 s after the last heartbeat — wait a moment |
 | App won't open on another Mac | Right-click → Open → Open (one-time Gatekeeper step) |
 | "command not found: pip" | Use `python3 -m pip install ...` instead |
 | Xcode prompt on macOS | Click Install, wait for it to finish, re-run `pip install` |
