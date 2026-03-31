@@ -4,6 +4,8 @@
 
 A self-contained web app built on Microsoft's [MarkItDown](https://github.com/microsoft/markitdown) library. All conversion happens on your machine — no files or URLs are ever sent to an external server.
 
+<img width="1834" height="1454" alt="2026-03-31 17 23 39" src="https://github.com/user-attachments/assets/522d8f44-e24d-4f5d-919f-90c39fe50672" />
+
 ---
 
 ## Features
