@@ -1,7 +1,7 @@
 """
 MarkItDown Local Frontend
 =========================
-Version: v0.42
+Version: v0.42.1
 
 A self-contained Flask web application that provides a browser-based UI
 for Microsoft's MarkItDown library (https://github.com/microsoft/markitdown).
@@ -135,7 +135,7 @@ TROUBLESHOOTING (Windows):
 
 from flask import Flask, request, jsonify, render_template_string
 from markitdown import MarkItDown
-import io, os, signal, traceback, threading, webbrowser
+import io, os, signal, time, traceback, threading, webbrowser
 
 # ---------------------------------------------------------------------------
 # App Initialisation
@@ -598,7 +598,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
   <button id="quit-btn" onclick="quitApp()">Quit</button>
   <h1>⚡ MarkItDown</h1>
   <p>Convert documents, PDFs, Office files &amp; more to Markdown — locally.</p>
-  <p id="version">v0.42</p>
+  <p id="version">v0.42.1</p>
 </header>
 
 <!-- ═══════════════════════════════════════════════════
@@ -954,8 +954,21 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 
   /** Sends a shutdown request to the server then closes the tab. */
   function quitApp() {
-    fetch("/quit", { method: "POST" }).finally(() => window.close());
+    // Stop the heartbeat so the watchdog doesn't fire before the quit response
+    clearInterval(heartbeatTimer);
+    fetch("/quit", { method: "POST" }).finally(() => {
+      // Redirect to the stopped page — works even when window.close() is blocked
+      window.location.href = "/stopped";
+    });
   }
+
+  // ── Heartbeat ─────────────────────────────────────────────────────────────
+  // Pings the server every 5 s so the watchdog knows the tab is still open.
+  // When the tab is closed the pings stop; the watchdog shuts the server down
+  // after a 12 s timeout (2× the interval + grace period).
+  const heartbeatTimer = setInterval(() => {
+    fetch("/heartbeat", { method: "POST" }).catch(() => {});
+  }, 5000);
 </script>
 </body>
 </html>
@@ -1057,6 +1070,55 @@ def quit_app():
     return jsonify({"status": "bye"})
 
 
+@app.route("/stopped")
+def stopped():
+    """Shown after the server has received a quit request and the browser redirects here."""
+    return """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>MarkItDown stopped</title>
+  <style>
+    body { background:#0f0f13; color:#a0a0b0; font-family: system-ui, sans-serif;
+           display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+    p { font-size:1rem; opacity:.7; }
+  </style>
+</head>
+<body><p>MarkItDown has stopped. You can close this tab.</p></body>
+</html>"""
+
+
+# Timestamp of the most recent heartbeat from the browser tab.
+_last_heartbeat = None
+
+
+@app.route("/heartbeat", methods=["POST"])
+def heartbeat():
+    """Receives a periodic ping from the browser tab. Resets the watchdog timer."""
+    global _last_heartbeat
+    _last_heartbeat = time.monotonic()
+    return jsonify({"status": "ok"})
+
+
+def _watchdog():
+    """Background thread: shuts the server down if no heartbeat arrives within 12 s.
+
+    The browser sends a heartbeat every 5 s. 12 s gives two missed pings plus a
+    grace period, covering page reloads and brief network hiccups without
+    triggering a false shutdown.
+    """
+    import time as _time
+    # Wait for the first heartbeat before starting to enforce the timeout,
+    # so a slow browser open doesn't trigger a premature shutdown.
+    while _last_heartbeat is None:
+        _time.sleep(1)
+    while True:
+        _time.sleep(3)
+        if _time.monotonic() - _last_heartbeat > 12:
+            os.kill(os.getpid(), signal.SIGTERM)
+            break
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
@@ -1073,6 +1135,7 @@ if __name__ == "__main__":
         webbrowser.open(f"http://127.0.0.1:{port}")
 
     threading.Thread(target=open_browser, daemon=True).start()
+    threading.Thread(target=_watchdog, daemon=True).start()
 
     # debug=False is required when packaging as a Mac app — debug mode uses
     # a reloader that spawns a second process, which breaks PyInstaller bundles.
