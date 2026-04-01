@@ -33,7 +33,7 @@ A self-contained web app built on Microsoft's [MarkItDown](https://github.com/mi
 
 ---
 
-## Option 1 — Run as a Windows App (recommended for Windows)
+## Option 1 — Run as a Windows App (recommended)
 
 Download `MarkItDown.exe` from the [Releases](https://github.com/kasey6801/MarkItDown/releases) page. No Python installation required.
 
@@ -51,7 +51,7 @@ Download `MarkItDown.exe` from the [Releases](https://github.com/kasey6801/MarkI
 
 ---
 
-## Option 2 — Run as a macOS App (recommended for Mac)
+## Option 2 — Run as a macOS App (recommended)
 
 Download the `MarkItDown.dmg` installer from the [Releases](https://github.com/kasey6801/MarkItDown/releases) page. No Python installation required.
 
