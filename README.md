@@ -1,6 +1,6 @@
 # ⚡ MarkItDown Local Frontend
 
-**v0.43.0** — Convert documents, PDFs, Office files & more to Markdown — locally. Available for macOS and Windows.
+**v0.42.1** — Convert documents, PDFs, Office files & more to Markdown — locally. Available for macOS and Windows.
 
 A self-contained web app built on Microsoft's [MarkItDown](https://github.com/microsoft/markitdown) library. All conversion happens on your machine — no files or URLs are ever sent to an external server.
 
@@ -32,26 +32,7 @@ A self-contained web app built on Microsoft's [MarkItDown](https://github.com/mi
 **Max file size:** 100 MB
 
 ---
-
-## Option 1 — Run as a Windows App (recommended)
-
-Download `MarkItDown.exe` from the [Releases](https://github.com/kasey6801/MarkItDown/releases) page. No Python installation required.
-
-### Steps
-
-1. Download `MarkItDown.exe` from the latest release.
-2. Double-click `MarkItDown.exe` to launch it.
-   > **Windows SmartScreen warning:** Click **More info** → **Run anyway**. This one-time step is required because the app is not code-signed. After the first launch you can double-click as normal.
-3. Your default browser opens automatically to `http://127.0.0.1:5001`.
-4. To quit, click the **Quit** button in the top-right corner of the UI, or simply close the browser tab — the app exits automatically.
-
-### Requirements
-
-- Windows 10 or Windows 11 (64-bit)
-
----
-
-## Option 2 — Run as a macOS App (recommended)
+## Option 1 — Run as a macOS App (recommended)
 
 Download the `MarkItDown.dmg` installer from the [v0.42.1 Release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.42.1) page. No Python installation required.
 
@@ -71,6 +52,23 @@ Download the `MarkItDown.dmg` installer from the [v0.42.1 Release](https://githu
 - macOS 12 (Monterey) or later
 - Apple Silicon (arm64) or Intel Mac
 
+---
+
+## Option 2 — Run as a Windows App (pre release)
+
+Download `MarkItDown.exe` from the [Releases](https://github.com/kasey6801/MarkItDown/releases) page. No Python installation required.
+
+### Steps
+
+1. Download `MarkItDown.exe` from the latest release.
+2. Double-click `MarkItDown.exe` to launch it.
+   > **Windows SmartScreen warning:** Click **More info** → **Run anyway**. This one-time step is required because the app is not code-signed. After the first launch you can double-click as normal.
+3. Your default browser opens automatically to `http://127.0.0.1:5001`.
+4. To quit, click the **Quit** button in the top-right corner of the UI, or simply close the browser tab — the app exits automatically.
+
+### Requirements
+
+- Windows 10 or Windows 11 (64-bit)
 ---
 
 ## Option 3 — Run from Source (Python)
@@ -141,7 +139,7 @@ python app.py
 
 ---
 
-## Option 4 — Build the Windows EXE Yourself
+## Option 4 — Build the Windows EXE Yourself (pre release)
 
 Use this to rebuild `MarkItDown.exe` after making changes to `app.py`.
 
