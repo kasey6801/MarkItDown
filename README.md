@@ -1,6 +1,6 @@
 # ⚡ MarkItDown Local Frontend
 
-**v0.42.1** — Convert documents, PDFs, Office files & more to Markdown — locally. Available for macOS and Windows.
+**v0.42.1** — Convert documents, PDFs, Office files & more to Markdown — locally. Available for macOS (Windows version in development).
 
 A self-contained web app built on Microsoft's [MarkItDown](https://github.com/microsoft/markitdown) library. All conversion happens on your machine — no files or URLs are ever sent to an external server.
 
