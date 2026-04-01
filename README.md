@@ -53,11 +53,11 @@ Download `MarkItDown.exe` from the [Releases](https://github.com/kasey6801/MarkI
 
 ## Option 2 — Run as a macOS App (recommended)
 
-Download the `MarkItDown.dmg` installer from the [Releases](https://github.com/kasey6801/MarkItDown/releases) page. No Python installation required.
+Download the `MarkItDown.dmg` installer from the [v0.42.1 Release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.42.1) page. No Python installation required.
 
 ### Steps
 
-1. Download `MarkItDown.dmg` from the latest release.
+1. Download `MarkItDown.dmg` from the [v0.42.1 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.42.1).
 2. Double-click the DMG to open it.
 3. Drag **MarkItDown.app** (left) into the **Applications** folder (right).
 4. Eject the DMG.
