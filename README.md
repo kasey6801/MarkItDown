@@ -1,6 +1,6 @@
 # ⚡ MarkItDown Local Frontend
 
-**v0.42.1** — Convert documents, PDFs, Office files & more to Markdown — locally.
+**v0.43.0** — Convert documents, PDFs, Office files & more to Markdown — locally. Available for macOS and Windows.
 
 A self-contained web app built on Microsoft's [MarkItDown](https://github.com/microsoft/markitdown) library. All conversion happens on your machine — no files or URLs are ever sent to an external server.
 
@@ -33,7 +33,25 @@ A self-contained web app built on Microsoft's [MarkItDown](https://github.com/mi
 
 ---
 
-## Option 1 — Run as a macOS App (recommended)
+## Option 1 — Run as a Windows App (recommended for Windows)
+
+Download `MarkItDown.exe` from the [Releases](https://github.com/kasey6801/MarkItDown/releases) page. No Python installation required.
+
+### Steps
+
+1. Download `MarkItDown.exe` from the latest release.
+2. Double-click `MarkItDown.exe` to launch it.
+   > **Windows SmartScreen warning:** Click **More info** → **Run anyway**. This one-time step is required because the app is not code-signed. After the first launch you can double-click as normal.
+3. Your default browser opens automatically to `http://127.0.0.1:5001`.
+4. To quit, click the **Quit** button in the top-right corner of the UI, or simply close the browser tab — the app exits automatically.
+
+### Requirements
+
+- Windows 10 or Windows 11 (64-bit)
+
+---
+
+## Option 2 — Run as a macOS App (recommended for Mac)
 
 Download the `MarkItDown.dmg` installer from the [Releases](https://github.com/kasey6801/MarkItDown/releases) page. No Python installation required.
 
@@ -55,7 +73,7 @@ Download the `MarkItDown.dmg` installer from the [Releases](https://github.com/k
 
 ---
 
-## Option 2 — Run from Source (Python)
+## Option 3 — Run from Source (Python)
 
 Use this if you want to modify the app or the pre-built `.app` doesn't work on your system.
 
@@ -123,7 +141,39 @@ python app.py
 
 ---
 
-## Option 3 — Build the macOS App Yourself
+## Option 4 — Build the Windows EXE Yourself
+
+Use this to rebuild `MarkItDown.exe` after making changes to `app.py`.
+
+### Requirements
+
+- A GitHub account with a fork of this repository (the build runs in GitHub Actions on a Windows runner — no local Windows machine needed)
+- Alternatively: a Windows machine with Python 3.10+ and `pip install pyinstaller`
+
+### Build via GitHub Actions
+
+1. Push your changes to your repository.
+2. Go to **Actions** → **Build Windows EXE** → **Run workflow**.
+3. Download `MarkItDown-Windows-x64.zip` from the completed run's artifacts.
+4. Extract the zip — `MarkItDown.exe` is inside.
+
+### Build locally on Windows
+
+Open **Command Prompt** and run:
+
+```bat
+cd C:\path\to\CC_Markdown
+python -m venv .venv
+.venv\Scripts\activate
+pip install "markitdown[all]" flask pyinstaller
+pyinstaller MarkItDown_win.spec --noconfirm
+```
+
+Output: `dist\MarkItDown.exe` (single self-contained executable, ~120 MB)
+
+---
+
+## Option 5 — Build the macOS App Yourself
 
 Use this to rebuild `MarkItDown.app` after making changes to `app.py`.
 
@@ -157,7 +207,9 @@ Output: `dist/MarkItDown.app` (~166 MB) and `dist/MarkItDown.dmg` (~90 MB)
 
 | Problem | Fix |
 |---|---|
-| "Port 5001 already in use" | Run `lsof -ti :5001 \| xargs kill -9` then restart |
+| "Port 5001 already in use" (macOS) | Run `lsof -ti :5001 \| xargs kill -9` then restart |
+| "Port 5001 already in use" (Windows) | Run `netstat -ano \| findstr :5001`, note the PID, then `taskkill /PID <pid> /F` |
+| Windows SmartScreen blocks the EXE | Click **More info** → **Run anyway** (one-time, no certificate) |
 | App didn't quit after closing tab | The watchdog allows 12 s after the last heartbeat — wait a moment |
 | App won't open on another Mac | Right-click → Open → Open (one-time Gatekeeper step) |
 | "command not found: pip" | Use `python3 -m pip install ...` instead |
@@ -170,12 +222,16 @@ Output: `dist/MarkItDown.app` (~166 MB) and `dist/MarkItDown.dmg` (~90 MB)
 
 ```
 CC_Markdown/
-├── app.py              # Single-file Flask app (HTML/CSS/JS embedded)
-├── MarkItDown.spec     # PyInstaller build configuration
-├── build.sh            # Build script (clean → bundle → sign)
+├── app.py                  # Single-file Flask app (HTML/CSS/JS embedded)
+├── MarkItDown.spec         # PyInstaller config — macOS .app bundle
+├── MarkItDown_win.spec     # PyInstaller config — Windows .exe (onefile)
+├── build.sh                # macOS build script (clean → bundle → sign → DMG)
+├── .github/
+│   └── workflows/
+│       └── build-windows.yml  # GitHub Actions workflow — builds Windows EXE
 ├── dist/
-│   └── MarkItDown.app  # Pre-built macOS application
-└── .venv/              # Python virtual environment (not committed)
+│   └── MarkItDown.app      # Pre-built macOS application
+└── .venv/                  # Python virtual environment (not committed)
 ```
 
 ---
