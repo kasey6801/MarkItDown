@@ -18,6 +18,23 @@ if [ ! -f "$SPEC_FILE" ]; then
     exit 1
 fi
 
+echo "==> Generating app icon..."
+.venv/bin/pip install Pillow -q
+.venv/bin/python make_icon.py
+mkdir -p MarkItDown.iconset
+sips -z 16 16     MarkItDown_icon.png --out MarkItDown.iconset/icon_16x16.png     >/dev/null
+sips -z 32 32     MarkItDown_icon.png --out MarkItDown.iconset/icon_16x16@2x.png  >/dev/null
+sips -z 32 32     MarkItDown_icon.png --out MarkItDown.iconset/icon_32x32.png     >/dev/null
+sips -z 64 64     MarkItDown_icon.png --out MarkItDown.iconset/icon_32x32@2x.png  >/dev/null
+sips -z 128 128   MarkItDown_icon.png --out MarkItDown.iconset/icon_128x128.png   >/dev/null
+sips -z 256 256   MarkItDown_icon.png --out MarkItDown.iconset/icon_128x128@2x.png >/dev/null
+sips -z 256 256   MarkItDown_icon.png --out MarkItDown.iconset/icon_256x256.png   >/dev/null
+sips -z 512 512   MarkItDown_icon.png --out MarkItDown.iconset/icon_256x256@2x.png >/dev/null
+sips -z 512 512   MarkItDown_icon.png --out MarkItDown.iconset/icon_512x512.png   >/dev/null
+sips -z 1024 1024 MarkItDown_icon.png --out MarkItDown.iconset/icon_512x512@2x.png >/dev/null
+iconutil -c icns MarkItDown.iconset
+rm -rf MarkItDown.iconset
+
 echo "==> Stopping any running instance on port 5001..."
 lsof -ti :5001 | xargs kill -9 2>/dev/null || true
 

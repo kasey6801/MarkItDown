@@ -101,7 +101,7 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name='MarkItDown.app',
-    icon=None,
+    icon='MarkItDown.icns',
     bundle_identifier='com.markitdown.app',
     version='0.42.1',
     info_plist={
