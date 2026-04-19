@@ -65,3 +65,21 @@ Both use `upx=False` — UPX corrupts Python extension modules (`.dylib`/`.pyd`)
 - macOS releases (`MarkItDown.dmg`) are built locally with `bash build.sh` and attached to the GitHub release manually. Current macOS release: **v0.42.1**.
 - Windows releases (`MarkItDown.exe`) are built automatically by GitHub Actions on tag push. The workflow creates the release if it doesn't exist, then uploads the EXE. Current Windows release: **v0.43.0**.
 - To trigger a Windows release: `git tag vX.Y.Z && git push origin vX.Y.Z`
+
+## Documentation Standard
+
+Every project in `ClaudeDev/` should have:
+- **`README.md`** — project overview, features, setup instructions, file structure
+- **`WORKFLOW.md`** — executive overview, step-by-step build log (user prompts + Claude actions), user guide
+
+Follow the format established in `CC_LLM_Prompts_I_Like/README.md` and `CC_LLM_Prompts_I_Like/WORKFLOW.md`.
+Create or update these files whenever a significant feature is added or the project is first set up.
+
+## Flask App Standard Features
+
+Every Flask app in `ClaudeDev/` **must** include:
+- **Quit button** — visible in the UI (top-right), sends `POST /quit` → `os._exit(0)`
+- **Heartbeat** — JS sends `POST /heartbeat` every 5 s via `setInterval`
+- **Watchdog thread** — daemon thread checks heartbeat; calls `os._exit(0)` if no heartbeat received for 12 s (frees the port when the browser tab is closed)
+- **`debug=False`** — required for PyInstaller compatibility
+- **`host='0.0.0.0'`** — required on macOS Sequoia (localhost may resolve to `::1`)
