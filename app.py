@@ -1,7 +1,7 @@
 """
 MarkItDown Local Frontend
 =========================
-Version: v0.44.0
+Version: v0.44.1
 
 A self-contained Flask web application that provides a browser-based UI
 for Microsoft's MarkItDown library (https://github.com/microsoft/markitdown).
@@ -135,7 +135,7 @@ TROUBLESHOOTING (Windows):
 
 from flask import Flask, request, jsonify, render_template_string
 from markitdown import MarkItDown
-import io, json, os, socket, sys, time, traceback, threading, urllib.request, webbrowser
+import io, ipaddress, json, os, socket, sys, time, traceback, threading, urllib.parse, urllib.request, webbrowser
 
 # ---------------------------------------------------------------------------
 # App Initialisation
@@ -156,7 +156,7 @@ md_converter = MarkItDown()
 # Single source of truth for the displayed app version. Keep the "Version:"
 # line in this file's header in sync. The HTML shows it via Jinja injection
 # in index(); windows_version_info.txt mirrors it for the Windows EXE resource.
-APP_VERSION = "v0.44.0"
+APP_VERSION = "v0.44.1"
 
 # ---------------------------------------------------------------------------
 # HTML / CSS / JS — Single-file frontend
@@ -1029,10 +1029,56 @@ def convert_file():
         )
         return jsonify({"markdown": result.text_content})
 
-    except Exception:
-        # Return the full Python traceback so the frontend can display it and
-        # the user can diagnose unsupported file types or dependency issues.
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except BaseException:
+        # MarkItDown's UnsupportedFormatException / FileConversionException
+        # subclass BaseException (not Exception), so a bare "except Exception"
+        # misses them and the request thread dies with no HTTP response. Catch
+        # BaseException here (re-raising the two we must not swallow above) and
+        # return the traceback JSON the frontend displays.
         return jsonify({"error": traceback.format_exc()}), 500
+
+
+def _validate_public_url(url):
+    """Return the URL if it is a safe public http(s) URL, else raise ValueError.
+
+    Guards /convert-url against two issues:
+      - Local file read: MarkItDown.convert() treats any string that is not an
+        http(s)/file URL as a local filesystem path and reads it off disk, so an
+        unvalidated value like "/Users/you/secret.pdf" would be returned to the
+        caller. Requiring an http/https scheme (and rejecting file://) forces the
+        network path.
+      - SSRF: the fetch happens server-side, so a host that resolves to a
+        loopback/private/link-local/reserved address (127.0.0.1, cloud-metadata
+        169.254.169.254, LAN services, ...) is blocked.
+
+    This validates the user-supplied URL only. It does NOT stop a redirect from a
+    public URL to an internal one, nor a DNS-rebinding race between this check and
+    MarkItDown's own fetch; those residual vectors are accepted as proportionate
+    for a local single-user tool.
+    """
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError("Only public http:// and https:// URLs are supported.")
+    host = parsed.hostname
+    if not host:
+        raise ValueError("URL has no host.")
+
+    default_port = 443 if parsed.scheme == "https" else 80
+    try:
+        infos = socket.getaddrinfo(
+            host, parsed.port or default_port, proto=socket.IPPROTO_TCP
+        )
+    except socket.gaierror:
+        raise ValueError("Could not resolve the URL host.")
+
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if (ip.is_private or ip.is_loopback or ip.is_link_local
+                or ip.is_reserved or ip.is_multicast or ip.is_unspecified):
+            raise ValueError("URL host resolves to a non-public address.")
+    return url
 
 
 @app.route("/convert-url", methods=["POST"])
@@ -1043,12 +1089,15 @@ def convert_url():
 
     MarkItDown handles URL fetching internally, including special cases such
     as YouTube transcripts and standard web pages. No local file is created.
+    The URL is validated first (public http/https only) to prevent local-file
+    reads and server-side request forgery; see _validate_public_url().
 
     Expected request body:
         { "url": "https://..." }
 
     Returns JSON:
         { "markdown": "<converted text>" }   on success  (HTTP 200)
+        { "error":    "<message>" }           on rejected URL (HTTP 400)
         { "error":    "<traceback>" }         on failure  (HTTP 500)
     """
     data = request.get_json(silent=True) or {}
@@ -1058,9 +1107,19 @@ def convert_url():
         return jsonify({"error": "No URL provided."}), 400
 
     try:
-        result = md_converter.convert(url)
+        safe_url = _validate_public_url(url)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+    try:
+        result = md_converter.convert(safe_url)
         return jsonify({"markdown": result.text_content})
-    except Exception:
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except BaseException:
+        # MarkItDown's conversion exceptions subclass BaseException; catch it
+        # (re-raising the two above) so failures return JSON instead of crashing
+        # the request thread. See convert_file() for the full explanation.
         return jsonify({"error": traceback.format_exc()}), 500
 
 

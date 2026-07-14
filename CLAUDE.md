@@ -53,7 +53,7 @@ The app is intentionally a single file (`app.py`, ~1150 lines). There are no tem
 |---|---|---|
 | `/` | GET | Serves the embedded HTML UI |
 | `/convert` | POST | Accepts multipart file upload, returns `{"markdown": "..."}` |
-| `/convert-url` | POST | Accepts `{"url": "..."}`, returns `{"markdown": "..."}` |
+| `/convert-url` | POST | Accepts `{"url": "..."}`, returns `{"markdown": "..."}`. The URL is validated first (`_validate_public_url`): public `http`/`https` only, and hosts resolving to loopback/private/link-local/reserved addresses are rejected. This prevents local-file reads (MarkItDown treats a non-URL string as a local path) and SSRF. Rejected URLs return HTTP 400 |
 | `/quit` | POST | Calls `os._exit(0)` after redirecting browser to `/stopped` |
 | `/stopped` | GET | Static "app has stopped" page |
 | `/heartbeat` | POST | Resets the watchdog timer |
@@ -71,9 +71,9 @@ Both use `upx=False` — UPX corrupts Python extension modules (`.dylib`/`.pyd`)
 ## Releasing
 
 - macOS releases (`MarkItDown.dmg`) are built locally with `bash build.sh` and attached to the GitHub release manually. Current macOS release: **v0.42.1**.
-- Windows releases (`MarkItDown.exe`) are built automatically by GitHub Actions on tag push. The workflow smoke-tests the built EXE (launches it, converts a sample file over HTTP, verifies clean shutdown) before uploading; a broken EXE never reaches a release. The workflow creates the release if it doesn't exist, then uploads the EXE. Current Windows release: **v0.44.0**.
+- Windows releases (`MarkItDown.exe`) are built automatically by GitHub Actions on tag push. The workflow smoke-tests the built EXE (launches it, converts a sample file over HTTP, verifies clean shutdown) before uploading; a broken EXE never reaches a release. The workflow creates the release if it doesn't exist, then uploads the EXE. Current Windows release: **v0.44.1**.
 - To trigger a Windows release: `git tag vX.Y.Z && git push origin vX.Y.Z`
-- The app version is defined by `APP_VERSION` in `app.py` (single source of truth; the header `Version:` line and `windows_version_info.txt` must be kept in sync, and the UI receives it via Jinja). Release tags are per-platform packaging events and may differ from the app version (the macOS v0.42.1 release ships app v0.42.1; the Windows v0.44.0 release ships app v0.44.0).
+- The app version is defined by `APP_VERSION` in `app.py` (single source of truth; the header `Version:` line and `windows_version_info.txt` must be kept in sync, and the UI receives it via Jinja). Release tags are per-platform packaging events and may differ from the app version (the macOS v0.42.1 release ships app v0.42.1; the Windows v0.44.1 release ships app v0.44.1).
 
 ## Documentation Standard
 

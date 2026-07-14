@@ -1,6 +1,6 @@
 # ⚡ MarkItDown Local Frontend
 
-**v0.44.0** - Convert documents, PDFs, Office files & more to Markdown, locally. Available for macOS ([v0.42.1 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.42.1), ships app v0.42.1) and Windows ([v0.44.0 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.0), ships app v0.44.0).
+**v0.44.1** - Convert documents, PDFs, Office files & more to Markdown, locally. Available for macOS ([v0.42.1 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.42.1), ships app v0.42.1) and Windows ([v0.44.1 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.1), ships app v0.44.1).
 
 A self-contained web app built on Microsoft's [MarkItDown](https://github.com/microsoft/markitdown) library. All conversion happens on your machine. No files or URLs are ever sent to an external server.
 
@@ -56,15 +56,15 @@ Download the `MarkItDown.dmg` installer from the [v0.42.1 Release](https://githu
 
 ## Option 2 — Run as a Windows App
 
-Download `MarkItDown.exe` from the [v0.44.0 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.0) page. No Python installation required.
+Download `MarkItDown.exe` from the [v0.44.1 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.1) page. No Python installation required.
 
-> **Version note:** the version shown in the app UI comes from `app.py` (the single source of truth for the app version). Release tags are per-platform packaging events; the macOS v0.42.1 release ships app v0.42.1, the Windows v0.44.0 release ships app v0.44.0.
+> **Version note:** the version shown in the app UI comes from `app.py` (the single source of truth for the app version). Release tags are per-platform packaging events; the macOS v0.42.1 release ships app v0.42.1, the Windows v0.44.1 release ships app v0.44.1.
 
 On Windows the app binds only to `127.0.0.1`, so no Defender Firewall prompt appears and nothing is exposed to your network. If the app cannot start, it shows an error dialog and writes details to `%LOCALAPPDATA%\MarkItDown\markitdown.log`. Every released EXE has passed an automated launch-and-convert test on a clean Windows machine in CI.
 
 ### Steps
 
-1. Download `MarkItDown.exe` from the [v0.44.0 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.0).
+1. Download `MarkItDown.exe` from the [v0.44.1 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.1).
 2. Double-click `MarkItDown.exe` to launch it.
    > **Windows SmartScreen warning:** Click **More info** → **Run anyway**. This one-time step is required because the app is not code-signed. After the first launch you can double-click as normal.
 3. Your default browser opens automatically to `http://127.0.0.1:5001`.
@@ -216,6 +216,7 @@ Output: `dist/MarkItDown.app` (~166 MB) and `dist/MarkItDown.dmg` (~90 MB)
 | App won't open on another Mac | Right-click → Open → Open (one-time Gatekeeper step) |
 | "command not found: pip" | Use `python3 -m pip install ...` instead |
 | Xcode prompt on macOS | Click Install, wait for it to finish, re-run `pip install` |
+| URL conversion says the address is not allowed | The URL box accepts public `http`/`https` addresses only; local paths and private-network or loopback addresses are rejected on purpose |
 | Conversion returns empty output | Check the error box in the UI for the full Python traceback |
 
 ---
