@@ -319,6 +319,12 @@ if(__exports != exports)module.exports = exports;return module.exports}));
       margin-top: 4px;
       opacity: 0.45;
     }
+    #address {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.72rem;
+      margin-top: 2px;
+      opacity: 0.4;
+    }
 
     /* ── Shared card wrapper ── */
     .card {
@@ -604,6 +610,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
   <h1>⚡ MarkItDown</h1>
   <p>Convert documents, PDFs, Office files &amp; more to Markdown — locally.</p>
   <p id="version">{{ version }}</p>
+  <p id="address">{{ address }}</p>
 </header>
 
 <!-- ═══════════════════════════════════════════════════
@@ -986,7 +993,11 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 @app.route("/")
 def index():
     """Serve the single-page frontend UI."""
-    return render_template_string(HTML, version=APP_VERSION)
+    # request.host is the host:port the browser reached us on (e.g.
+    # "127.0.0.1:5001"), so it reflects the actual bound port including any
+    # 5001-5010 fallback. It is HTML-escaped by Jinja autoescaping in the
+    # template, so the client-controlled Host header cannot inject markup.
+    return render_template_string(HTML, version=APP_VERSION, address=request.host)
 
 
 @app.route("/convert", methods=["POST"])
