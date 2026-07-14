@@ -1116,7 +1116,6 @@ def _watchdog():
         _time.sleep(3)
         if _time.monotonic() - _last_heartbeat > 12:
             os._exit(0)
-            break
 
 
 # ---------------------------------------------------------------------------

@@ -21,10 +21,12 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
+          # 3.12 is the known-working Windows build Python — do not bump without
+          # a validation build (min supported: 3.10; local dev uses 3.14)
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install "markitdown[all]" flask pyinstaller
+        run: pip install -r requirements.txt
 
       - name: Build EXE with PyInstaller
         run: pyinstaller MarkItDown_win.spec --noconfirm

@@ -17,7 +17,7 @@ Opens automatically at `http://127.0.0.1:5001`. Stop with the Quit button in the
 ```bash
 bash build.sh
 ```
-Requires `.venv` with `pip install "markitdown[all]" flask pyinstaller`. Outputs `dist/MarkItDown.app` and `dist/MarkItDown.dmg`.
+Requires `.venv` with `pip install -r requirements.txt` (pinned; includes PyInstaller and Pillow). Outputs `dist/MarkItDown.app` and `dist/MarkItDown.dmg`.
 
 ### Windows `.exe`
 Triggered via GitHub Actions (`.github/workflows/build-windows.yml`) on tag push or manual dispatch. To build locally on Windows:
@@ -26,6 +26,10 @@ Triggered via GitHub Actions (`.github/workflows/build-windows.yml`) on tag push
 pyinstaller MarkItDown_win.spec --noconfirm
 ```
 Outputs `dist\MarkItDown.exe` (single self-contained file).
+
+### Dependencies
+
+`requirements.txt` is the dependency source of truth (runtime and build tooling, pinned to the known-working versions). Python: minimum 3.10, local development on 3.14, Windows CI on 3.12. The CI Python is the known-working Windows build version; validate with a manual `workflow_dispatch` run before changing it.
 
 ## Architecture
 
@@ -65,14 +69,15 @@ Both use `upx=False` — UPX corrupts Python extension modules (`.dylib`/`.pyd`)
 - macOS releases (`MarkItDown.dmg`) are built locally with `bash build.sh` and attached to the GitHub release manually. Current macOS release: **v0.42.1**.
 - Windows releases (`MarkItDown.exe`) are built automatically by GitHub Actions on tag push. The workflow creates the release if it doesn't exist, then uploads the EXE. Current Windows release: **v0.43.0**.
 - To trigger a Windows release: `git tag vX.Y.Z && git push origin vX.Y.Z`
+- The app version displayed in the UI is defined in `app.py` (the header `Version:` line and the `#version` element in the embedded HTML). `app.py` is the single source of truth for the app version. Release tags are per-platform packaging events and may differ from the app version (the Windows v0.43.0 release ships app v0.42.1).
 
 ## Documentation Standard
 
 Every project in `ClaudeDev/` should have:
 - **`README.md`** — project overview, features, setup instructions, file structure
-- **`WORKFLOW.md`** — executive overview, step-by-step build log (user prompts + Claude actions), user guide
+- **`MarkItDown_WORKFLOW.md`** — executive overview, step-by-step build log (user prompts + Claude actions), user guide. Workflow files are named `<ProjectName>_WORKFLOW.md`.
 
-Follow the format established in `CC_LLM_Prompts_I_Like/README.md` and `CC_LLM_Prompts_I_Like/WORKFLOW.md`.
+Follow the format established in `CC_9to5_AI/WORKFLOW.md`.
 Create or update these files whenever a significant feature is added or the project is first set up.
 
 ## Flask App Standard Features

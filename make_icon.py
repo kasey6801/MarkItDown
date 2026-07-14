@@ -1,5 +1,5 @@
 """
-Generate 9to5AI.png — monkey-plush-inspired app icon (1024×1024 RGBA).
+Generate MarkItDown_icon.png — monkey-plush-inspired app icon (1024×1024 RGBA).
 Run: python make_icon.py
 """
 from PIL import Image, ImageDraw, ImageFilter

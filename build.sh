@@ -9,7 +9,7 @@ echo "==> Checking environment..."
 if [ ! -f "$VENV_PYINSTALLER" ]; then
     echo "ERROR: .venv not found. Run setup first:"
     echo "  python3 -m venv .venv"
-    echo "  .venv/bin/pip install 'markitdown[all]' flask pyinstaller"
+    echo "  .venv/bin/pip install -r requirements.txt"
     exit 1
 fi
 
@@ -18,8 +18,10 @@ if [ ! -f "$SPEC_FILE" ]; then
     exit 1
 fi
 
+echo "==> Syncing dependencies from requirements.txt..."
+.venv/bin/pip install -q -r requirements.txt
+
 echo "==> Generating app icon..."
-.venv/bin/pip install Pillow -q
 .venv/bin/python make_icon.py
 mkdir -p MarkItDown.iconset
 sips -z 16 16     MarkItDown_icon.png --out MarkItDown.iconset/icon_16x16.png     >/dev/null

@@ -1,6 +1,6 @@
 # ⚡ MarkItDown Local Frontend
 
-**v0.42.1** — Convert documents, PDFs, Office files & more to Markdown — locally. Available for macOS (Windows version in development).
+**v0.42.1** - Convert documents, PDFs, Office files & more to Markdown, locally. Available for macOS ([v0.42.1 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.42.1)) and Windows ([v0.43.0 pre-release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.43.0)).
 
 A self-contained web app built on Microsoft's [MarkItDown](https://github.com/microsoft/markitdown) library. All conversion happens on your machine. No files or URLs are ever sent to an external server.
 
@@ -56,11 +56,13 @@ Download the `MarkItDown.dmg` installer from the [v0.42.1 Release](https://githu
 
 ## Option 2 — Run as a Windows App (pre release)
 
-Download `MarkItDown.exe` from the [Releases](https://github.com/kasey6801/MarkItDown/releases) page. No Python installation required.
+Download `MarkItDown.exe` from the [v0.43.0 pre-release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.43.0) page. No Python installation required.
+
+> **Version note:** the version shown in the app UI comes from `app.py` (the single source of truth for the app version). Release tags are per-platform packaging events; the Windows v0.43.0 release ships app v0.42.1.
 
 ### Steps
 
-1. Download `MarkItDown.exe` from the latest release.
+1. Download `MarkItDown.exe` from the [v0.43.0 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.43.0).
 2. Double-click `MarkItDown.exe` to launch it.
    > **Windows SmartScreen warning:** Click **More info** → **Run anyway**. This one-time step is required because the app is not code-signed. After the first launch you can double-click as normal.
 3. Your default browser opens automatically to `http://127.0.0.1:5001`.
@@ -78,7 +80,7 @@ Use this if you want to modify the app or the pre-built `.app` doesn't work on y
 ### Requirements
 
 - macOS 12 or later (also works on Windows)
-- Python 3.10 or higher
+- Python 3.10 or higher (developed on 3.14; official Windows builds use 3.12)
 
 Check your Python version in Terminal:
 ```bash
@@ -101,8 +103,8 @@ python3 -m venv .venv
 # 3. Activate it (your prompt will show (.venv) when active)
 source .venv/bin/activate
 
-# 4. Install dependencies
-pip install "markitdown[all]" flask
+# 4. Install dependencies (pinned versions)
+pip install -r requirements.txt
 ```
 
 > **Tip:** If you see an Xcode prompt, click Install and wait for it to finish, then re-run the `pip install` command.
@@ -127,7 +129,7 @@ Open **Command Prompt** (`Win + R` → type `cmd` → Enter):
 cd C:\path\to\CC_Markdown
 python -m venv .venv
 .venv\Scripts\activate
-pip install "markitdown[all]" flask
+pip install -r requirements.txt
 ```
 
 > **Note:** If Python is not found, re-run the installer from [python.org](https://www.python.org/downloads/) and check **"Add Python to PATH"**.
@@ -146,7 +148,7 @@ Use this to rebuild `MarkItDown.exe` after making changes to `app.py`.
 ### Requirements
 
 - A GitHub account with a fork of this repository (the build runs in GitHub Actions on a Windows runner — no local Windows machine needed)
-- Alternatively: a Windows machine with Python 3.10+ and `pip install pyinstaller`
+- Alternatively: a Windows machine with Python 3.10+ (`pip install -r requirements.txt` includes PyInstaller)
 
 ### Build via GitHub Actions
 
@@ -163,7 +165,7 @@ Open **Command Prompt** and run:
 cd C:\path\to\CC_Markdown
 python -m venv .venv
 .venv\Scripts\activate
-pip install "markitdown[all]" flask pyinstaller
+pip install -r requirements.txt
 pyinstaller MarkItDown_win.spec --noconfirm
 ```
 
@@ -177,9 +179,7 @@ Use this to rebuild `MarkItDown.app` after making changes to `app.py`.
 
 ### Additional requirement
 
-```bash
-pip install pyinstaller
-```
+None beyond the one-time setup: `requirements.txt` already includes PyInstaller and Pillow (`pip install -r requirements.txt`).
 
 ### Build
 
@@ -221,6 +221,7 @@ Output: `dist/MarkItDown.app` (~166 MB) and `dist/MarkItDown.dmg` (~90 MB)
 ```
 CC_Markdown/
 ├── app.py                  # Single-file Flask app (HTML/CSS/JS embedded)
+├── requirements.txt        # Pinned dependencies (runtime + build tools)
 ├── MarkItDown.spec         # PyInstaller config — macOS .app bundle
 ├── MarkItDown_win.spec     # PyInstaller config — Windows .exe (onefile)
 ├── build.sh                # macOS build script (clean → bundle → sign → DMG)
