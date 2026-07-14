@@ -1,6 +1,6 @@
 # ⚡ MarkItDown Local Frontend
 
-**v0.42.1** - Convert documents, PDFs, Office files & more to Markdown, locally. Available for macOS ([v0.42.1 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.42.1)) and Windows ([v0.43.0 pre-release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.43.0)).
+**v0.44.0** - Convert documents, PDFs, Office files & more to Markdown, locally. Available for macOS ([v0.42.1 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.42.1), ships app v0.42.1) and Windows ([v0.44.0 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.0), ships app v0.44.0).
 
 A self-contained web app built on Microsoft's [MarkItDown](https://github.com/microsoft/markitdown) library. All conversion happens on your machine. No files or URLs are ever sent to an external server.
 
@@ -54,15 +54,17 @@ Download the `MarkItDown.dmg` installer from the [v0.42.1 Release](https://githu
 
 ---
 
-## Option 2 — Run as a Windows App (pre release)
+## Option 2 — Run as a Windows App
 
-Download `MarkItDown.exe` from the [v0.43.0 pre-release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.43.0) page. No Python installation required.
+Download `MarkItDown.exe` from the [v0.44.0 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.0) page. No Python installation required.
 
-> **Version note:** the version shown in the app UI comes from `app.py` (the single source of truth for the app version). Release tags are per-platform packaging events; the Windows v0.43.0 release ships app v0.42.1.
+> **Version note:** the version shown in the app UI comes from `app.py` (the single source of truth for the app version). Release tags are per-platform packaging events; the macOS v0.42.1 release ships app v0.42.1, the Windows v0.44.0 release ships app v0.44.0.
+
+On Windows the app binds only to `127.0.0.1`, so no Defender Firewall prompt appears and nothing is exposed to your network. If the app cannot start, it shows an error dialog and writes details to `%LOCALAPPDATA%\MarkItDown\markitdown.log`. Every released EXE has passed an automated launch-and-convert test on a clean Windows machine in CI.
 
 ### Steps
 
-1. Download `MarkItDown.exe` from the [v0.43.0 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.43.0).
+1. Download `MarkItDown.exe` from the [v0.44.0 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.0).
 2. Double-click `MarkItDown.exe` to launch it.
    > **Windows SmartScreen warning:** Click **More info** → **Run anyway**. This one-time step is required because the app is not code-signed. After the first launch you can double-click as normal.
 3. Your default browser opens automatically to `http://127.0.0.1:5001`.
@@ -141,9 +143,9 @@ python app.py
 
 ---
 
-## Option 4 — Build the Windows EXE Yourself (pre release)
+## Option 4 — Build the Windows EXE Yourself
 
-Use this to rebuild `MarkItDown.exe` after making changes to `app.py`.
+Use this to rebuild `MarkItDown.exe` after making changes to `app.py`. The GitHub Actions workflow smoke-tests every build: it launches the EXE on the runner, converts a sample file over HTTP, and verifies clean shutdown before the artifact is uploaded or released.
 
 ### Requirements
 
@@ -205,9 +207,11 @@ Output: `dist/MarkItDown.app` (~166 MB) and `dist/MarkItDown.dmg` (~90 MB)
 
 | Problem | Fix |
 |---|---|
-| "Port 5001 already in use" (macOS) | Run `lsof -ti :5001 \| xargs kill -9` then restart |
-| "Port 5001 already in use" (Windows) | Run `netstat -ano \| findstr :5001`, note the PID, then `taskkill /PID <pid> /F` |
+| Port 5001 already in use | Nothing to do: if another MarkItDown is running, the app opens a tab to it; if another program owns the port, the app falls back to 5002-5010 automatically. As a last resort: macOS `lsof -ti :5001 \| xargs kill -9`, Windows `netstat -ano \| findstr :5001` then `taskkill /PID <pid> /F` |
+| "MarkItDown failed to start" dialog (Windows) | Open `%LOCALAPPDATA%\MarkItDown\markitdown.log` for the full error (macOS equivalent: `~/Library/Logs/MarkItDown/markitdown.log`) |
 | Windows SmartScreen blocks the EXE | Click **More info** → **Run anyway** (one-time, no certificate) |
+| Audio (MP3/WAV) transcription fails | Install [ffmpeg](https://ffmpeg.org) and make sure it is on PATH; transcription also needs internet access (Google speech API) |
+| Image metadata missing from output | Optional: install [exiftool](https://exiftool.org) for richer image/audio metadata |
 | App didn't quit after closing tab | The watchdog allows 12 s after the last heartbeat — wait a moment |
 | App won't open on another Mac | Right-click → Open → Open (one-time Gatekeeper step) |
 | "command not found: pip" | Use `python3 -m pip install ...` instead |
@@ -224,6 +228,9 @@ CC_Markdown/
 ├── requirements.txt        # Pinned dependencies (runtime + build tools)
 ├── MarkItDown.spec         # PyInstaller config — macOS .app bundle
 ├── MarkItDown_win.spec     # PyInstaller config — Windows .exe (onefile)
+├── windows_version_info.txt # Windows EXE version resource (sync with app.py)
+├── make_icon.py            # Generates the app icon (PNG + Windows .ico)
+├── MarkItDown_icon.ico     # Windows EXE icon (committed, from make_icon.py)
 ├── build.sh                # macOS build script (clean → bundle → sign → DMG)
 ├── .github/
 │   └── workflows/
@@ -232,6 +239,14 @@ CC_Markdown/
 │   └── MarkItDown.app      # Pre-built macOS application
 └── .venv/                  # Python virtual environment (not committed)
 ```
+
+---
+
+## Limitations
+
+- Both binaries are unsigned (no Apple Developer ID, no Windows code-signing certificate), so macOS Gatekeeper and Windows SmartScreen each show a one-time warning. The Windows EXE ships an icon and version metadata, which improves the SmartScreen dialog, but only code signing removes it.
+- Audio transcription (MP3/WAV) requires ffmpeg on PATH and internet access; it is the only feature that sends data off the machine (audio goes to the Google speech API).
+- exiftool is optional; without it, image and audio conversions omit detailed metadata.
 
 ---
 

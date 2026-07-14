@@ -31,6 +31,68 @@ jobs:
       - name: Build EXE with PyInstaller
         run: pyinstaller MarkItDown_win.spec --noconfirm
 
+      # Launch the actual EXE on the runner and exercise it over HTTP. This is
+      # what a clean Windows 11 machine exercises: onefile extraction, every
+      # module-level import (a missing bundled package crashes before
+      # /heartbeat answers), the loopback server, a real conversion, and clean
+      # shutdown. A broken EXE never reaches the artifact or a release.
+      # The test only GETs /heartbeat (never POSTs), so the watchdog never arms.
+      - name: Smoke test the EXE
+        shell: pwsh
+        env:
+          MARKITDOWN_NO_BROWSER: '1'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = 'http://127.0.0.1:5001'
+
+          $proc = Start-Process -FilePath 'dist\MarkItDown.exe' -PassThru
+
+          # First run of a onefile EXE unpacks itself before Python starts,
+          # and Defender may scan it, so allow a generous 120 s.
+          $ready = $false
+          $hb = $null
+          foreach ($i in 1..120) {
+            if ($proc.HasExited) { break }
+            try {
+              $hb = Invoke-RestMethod -Uri "$base/heartbeat" -Method Get -TimeoutSec 2
+              if ($hb.app -eq 'MarkItDown') { $ready = $true; break }
+            } catch { Start-Sleep -Seconds 1 }
+          }
+          if (-not $ready) {
+            $log = Join-Path $env:LOCALAPPDATA 'MarkItDown\markitdown.log'
+            if (Test-Path $log) { Write-Host '--- markitdown.log ---'; Get-Content $log }
+            if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
+            throw 'EXE did not answer GET /heartbeat within 120 s'
+          }
+          Write-Host "Server ready, app version: $($hb.version)"
+
+          # The UI must load.
+          $ui = Invoke-WebRequest -Uri "$base/" -UseBasicParsing -TimeoutSec 10
+          if ($ui.StatusCode -ne 200 -or $ui.Content -notmatch 'MarkItDown') {
+            throw 'GET / did not return the UI'
+          }
+
+          # Real conversion round-trip through markitdown.
+          Set-Content -Path smoke.html -Value '<html><body><h1>Smoke Test</h1><p>hello from CI</p></body></html>'
+          $resp = Invoke-RestMethod -Uri "$base/convert" -Method Post -Form @{ file = Get-Item smoke.html }
+          if (-not $resp.markdown -or $resp.markdown -notmatch 'Smoke Test') {
+            throw "Conversion failed: $($resp | ConvertTo-Json -Depth 3)"
+          }
+          Write-Host 'Conversion OK'
+
+          # Clean shutdown. /quit calls os._exit shortly after replying, so the
+          # HTTP call may be cut off mid-response; that is expected.
+          try { Invoke-RestMethod -Uri "$base/quit" -Method Post -TimeoutSec 5 } catch { }
+          foreach ($i in 1..15) {
+            if ($proc.HasExited) { break }
+            Start-Sleep -Seconds 1
+          }
+          if (-not $proc.HasExited) {
+            Stop-Process -Id $proc.Id -Force
+            throw 'Process did not exit after POST /quit'
+          }
+          Write-Host 'Smoke test passed'
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

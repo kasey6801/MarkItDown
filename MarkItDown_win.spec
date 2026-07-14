@@ -12,14 +12,21 @@ for pkg in [
     'xlrd', 'olefile', 'lxml', 'bs4', 'PIL',
     'pydub', 'speech_recognition', 'youtube_transcript_api',
     'charset_normalizer', 'certifi',
+    # markitdown 0.0.2 imports these unconditionally at module load; the
+    # azure ones are namespace packages that PyInstaller's static analysis
+    # regularly misses, which would crash the app before Flask starts:
+    'azure.ai.documentintelligence', 'azure.identity', 'azure.core',
+    'pandas', 'numpy', 'markdownify', 'requests',
 ]:
     try:
         d, b, h = collect_all(pkg)
         datas         += d
         binaries      += b
         hiddenimports += h
-    except Exception:
-        pass  # skip packages not installed (e.g. macholib on Windows)
+    except Exception as e:
+        # Keep the build going for genuinely optional packages, but leave
+        # evidence in the CI log; the smoke-test step is the hard gate.
+        print(f"WARNING: collect_all({pkg!r}) failed: {e}")
 
 hiddenimports += [
     'markitdown',
@@ -44,6 +51,13 @@ hiddenimports += [
     'PIL.BmpImagePlugin',
     'PIL.WebPImagePlugin',
     'openpyxl.cell._writer',
+    'azure.ai.documentintelligence',
+    'azure.identity',
+    'azure.core',
+    'pandas',
+    'numpy',
+    'markdownify',
+    'requests',
 ]
 
 a = Analysis(
@@ -82,4 +96,6 @@ exe = EXE(
     upx=False,          # UPX can corrupt .pyd extension modules on Windows
     console=False,      # No terminal window when launched from Explorer
     disable_windowed_traceback=False,
+    icon='MarkItDown_icon.ico',
+    version='windows_version_info.txt',
 )

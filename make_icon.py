@@ -1,5 +1,7 @@
 """
-Generate MarkItDown_icon.png — monkey-plush-inspired app icon (1024×1024 RGBA).
+Generate the monkey-plush-inspired app icon (1024x1024 RGBA).
+Outputs: MarkItDown_icon.png (macOS .icns pipeline in build.sh) and
+MarkItDown_icon.ico (Windows EXE icon, referenced by MarkItDown_win.spec).
 Run: python make_icon.py
 """
 from PIL import Image, ImageDraw, ImageFilter
@@ -64,3 +66,10 @@ draw.ellipse(
 
 img.save("MarkItDown_icon.png")
 print("Saved MarkItDown_icon.png")
+
+# --- Windows .ico (multi-size; referenced by MarkItDown_win.spec icon=) ---
+# Pillow downscales from the 1024x1024 master into each embedded size.
+ICO_SIZES = [(16, 16), (24, 24), (32, 32), (48, 48),
+             (64, 64), (128, 128), (256, 256)]
+img.save("MarkItDown_icon.ico", sizes=ICO_SIZES)
+print("Saved MarkItDown_icon.ico")

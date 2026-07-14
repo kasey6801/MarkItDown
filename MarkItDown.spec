@@ -12,14 +12,21 @@ for pkg in [
     'xlrd', 'olefile', 'lxml', 'bs4', 'PIL',
     'pydub', 'speech_recognition', 'youtube_transcript_api',
     'charset_normalizer', 'certifi',
+    # markitdown 0.0.2 imports these unconditionally at module load; the
+    # azure ones are namespace packages that PyInstaller's static analysis
+    # regularly misses, which would crash the app before Flask starts:
+    'azure.ai.documentintelligence', 'azure.identity', 'azure.core',
+    'pandas', 'numpy', 'markdownify', 'requests',
 ]:
     try:
         d, b, h = collect_all(pkg)
         datas        += d
         binaries     += b
         hiddenimports += h
-    except Exception:
-        pass  # skip packages that are not installed
+    except Exception as e:
+        # Keep the build going for genuinely optional packages, but leave
+        # evidence in the build log.
+        print(f"WARNING: collect_all({pkg!r}) failed: {e}")
 
 hiddenimports += [
     'markitdown',

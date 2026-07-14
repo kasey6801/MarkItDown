@@ -1,7 +1,7 @@
 """
 MarkItDown Local Frontend
 =========================
-Version: v0.42.1
+Version: v0.44.0
 
 A self-contained Flask web application that provides a browser-based UI
 for Microsoft's MarkItDown library (https://github.com/microsoft/markitdown).
@@ -135,7 +135,7 @@ TROUBLESHOOTING (Windows):
 
 from flask import Flask, request, jsonify, render_template_string
 from markitdown import MarkItDown
-import io, os, time, traceback, threading, webbrowser
+import io, json, os, socket, sys, time, traceback, threading, urllib.request, webbrowser
 
 # ---------------------------------------------------------------------------
 # App Initialisation
@@ -152,6 +152,11 @@ app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100 MB
 # Instantiate with no arguments — newer versions of MarkItDown removed the
 # enable_plugins parameter and handle plugin discovery automatically.
 md_converter = MarkItDown()
+
+# Single source of truth for the displayed app version. Keep the "Version:"
+# line in this file's header in sync. The HTML shows it via Jinja injection
+# in index(); windows_version_info.txt mirrors it for the Windows EXE resource.
+APP_VERSION = "v0.44.0"
 
 # ---------------------------------------------------------------------------
 # HTML / CSS / JS — Single-file frontend
@@ -598,7 +603,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
   <button id="quit-btn" onclick="quitApp()">Quit</button>
   <h1>⚡ MarkItDown</h1>
   <p>Convert documents, PDFs, Office files &amp; more to Markdown — locally.</p>
-  <p id="version">v0.42.1</p>
+  <p id="version">{{ version }}</p>
 </header>
 
 <!-- ═══════════════════════════════════════════════════
@@ -981,7 +986,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
 @app.route("/")
 def index():
     """Serve the single-page frontend UI."""
-    return render_template_string(HTML)
+    return render_template_string(HTML, version=APP_VERSION)
 
 
 @app.route("/convert", methods=["POST"])
@@ -1092,12 +1097,19 @@ def stopped():
 _last_heartbeat = None
 
 
-@app.route("/heartbeat", methods=["POST"])
+@app.route("/heartbeat", methods=["GET", "POST"])
 def heartbeat():
-    """Receives a periodic ping from the browser tab. Resets the watchdog timer."""
+    """POST: periodic ping from the browser tab; resets the watchdog timer.
+
+    GET: lightweight identification marker used by the startup code (to detect
+    an already-running instance) and by the CI smoke test. GET deliberately
+    does NOT update _last_heartbeat, so probing never arms or extends the
+    watchdog shutdown timer.
+    """
     global _last_heartbeat
-    _last_heartbeat = time.monotonic()
-    return jsonify({"status": "ok"})
+    if request.method == "POST":
+        _last_heartbeat = time.monotonic()
+    return jsonify({"status": "ok", "app": "MarkItDown", "version": APP_VERSION})
 
 
 def _watchdog():
@@ -1122,26 +1134,152 @@ def _watchdog():
 # Entry point
 # ---------------------------------------------------------------------------
 
-if __name__ == "__main__":
-    port = 5001
+IS_WINDOWS = sys.platform.startswith("win")
 
-    # Open the browser automatically after a short delay, giving Flask time
-    # to start before the browser tries to connect. The delay is run in a
-    # background thread so it doesn't block the server from starting.
-    def open_browser():
-        import time
-        time.sleep(1.2)
-        webbrowser.open(f"http://127.0.0.1:{port}")
+# Bind address is platform-conditional:
+#   Windows: 127.0.0.1. Binding 0.0.0.0 makes the Defender Firewall prompt
+#            appear on first launch and exposes the app to the local network
+#            for no benefit. All frontend requests use relative URLs and the
+#            browser is opened on 127.0.0.1, so loopback-only is sufficient.
+#   macOS:   0.0.0.0. Required on Sequoia, where localhost may resolve to ::1;
+#            binding all interfaces keeps both loopback addresses reachable.
+HOST = "127.0.0.1" if IS_WINDOWS else "0.0.0.0"
 
-    threading.Thread(target=open_browser, daemon=True).start()
-    threading.Thread(target=_watchdog, daemon=True).start()
+# Ports tried in order. 5001 is the historical default; the rest are fallbacks
+# so a busy port no longer kills the app silently (WinError 10048 on Windows).
+PORT_RANGE = range(5001, 5011)
 
-    # debug=False is required when packaging as a Mac app — debug mode uses
-    # a reloader that spawns a second process, which breaks PyInstaller bundles.
-    # host='0.0.0.0' ensures Flask accepts connections on both IPv4 and IPv6
-    # loopback addresses (127.0.0.1 and ::1), preventing "Failed to fetch" errors
-    # on macOS Sequoia where localhost may resolve to ::1.
+
+def _log_path():
+    """Per-user log file for startup diagnostics. Created on demand.
+
+    Windows: %LOCALAPPDATA%\\MarkItDown\\markitdown.log
+    macOS:   ~/Library/Logs/MarkItDown/markitdown.log
+    """
+    if IS_WINDOWS:
+        base = os.environ.get("LOCALAPPDATA", os.path.expanduser("~"))
+        folder = os.path.join(base, "MarkItDown")
+    else:
+        folder = os.path.expanduser("~/Library/Logs/MarkItDown")
+    os.makedirs(folder, exist_ok=True)
+    return os.path.join(folder, "markitdown.log")
+
+
+def _fatal(message):
+    """Report a fatal startup error, then exit.
+
+    The packaged app runs with console=False, so an uncaught exception here
+    would otherwise be invisible. Always write the traceback to the log file;
+    on Windows also show a MessageBox, on macOS print to stderr.
+    Call only from inside an except block (uses traceback.format_exc()).
+    """
+    details = message + "\n\n" + traceback.format_exc()
+    log_file = "(log unavailable)"
     try:
-        app.run(debug=False, host='0.0.0.0', port=port)
+        log_file = _log_path()
+        with open(log_file, "w", encoding="utf-8") as fh:
+            fh.write(time.strftime("[%Y-%m-%d %H:%M:%S] ") + details + "\n")
+    except OSError:
+        pass  # a failing log write must never mask the real error
+    if IS_WINDOWS:
+        try:
+            import ctypes
+            ctypes.windll.user32.MessageBoxW(
+                0,
+                message + "\n\nDetails were written to:\n" + log_file,
+                "MarkItDown failed to start",
+                0x10,  # MB_ICONERROR
+            )
+        except Exception:
+            pass
+    else:
+        print(details, file=sys.stderr)
+    os._exit(1)
+
+
+def _existing_instance(port):
+    """True if a MarkItDown instance already answers on this port.
+
+    Uses GET /heartbeat, which returns an identifying marker without touching
+    the watchdog (only POST resets the timer), so probing a running instance
+    never affects its lifecycle. Any other server on the port returns non-JSON
+    or a different payload and is treated as "not ours".
+    """
+    try:
+        url = "http://127.0.0.1:{}/heartbeat".format(port)
+        with urllib.request.urlopen(url, timeout=1) as resp:
+            return json.loads(resp.read().decode("utf-8")).get("app") == "MarkItDown"
+    except Exception:
+        return False
+
+
+def _port_is_free(port):
+    """Best-effort bind test on the address the server will actually use.
+
+    No SO_REUSEADDR: on Windows it would let the test bind succeed on a port
+    another process is actively listening on, defeating the check.
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind((HOST, port))
+            return True
+        except OSError:
+            return False
+
+
+def _pick_port():
+    """Choose the port to serve on.
+
+    For each candidate: if a MarkItDown instance already owns it, do not start
+    a second server; open a browser tab pointing at the existing instance and
+    exit cleanly. Otherwise take the first port that binds. A tiny window
+    exists between the bind test and app.run() taking the port; if another
+    process wins that race, app.run() raises and _fatal() reports it.
+    """
+    for port in PORT_RANGE:
+        if _existing_instance(port):
+            webbrowser.open("http://127.0.0.1:{}".format(port))
+            os._exit(0)
+        if _port_is_free(port):
+            return port
+    raise OSError(
+        "No free port in {}-{}.".format(PORT_RANGE.start, PORT_RANGE.stop - 1)
+    )
+
+
+def _open_browser_when_ready(port):
+    """Open the browser once the server actually accepts requests.
+
+    Replaces the old fixed 1.2 s sleep: on a slow machine the server can take
+    longer than that, and opening the browser early shows a connection error.
+    GET /heartbeat is used because it confirms the app is serving without
+    arming the watchdog. If the server never comes up, the main thread's
+    error handling reports why; opening a browser would only add noise.
+    """
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        if _existing_instance(port):
+            webbrowser.open("http://127.0.0.1:{}".format(port))
+            return
+        time.sleep(0.25)
+
+
+if __name__ == "__main__":
+    try:
+        port = _pick_port()
+
+        # The CI smoke test sets MARKITDOWN_NO_BROWSER=1: the GitHub runner
+        # drives the app over plain HTTP and has no use for a browser window.
+        if not os.environ.get("MARKITDOWN_NO_BROWSER"):
+            threading.Thread(
+                target=_open_browser_when_ready, args=(port,), daemon=True
+            ).start()
+        threading.Thread(target=_watchdog, daemon=True).start()
+
+        # debug=False is required when packaging with PyInstaller: debug mode
+        # uses a reloader that spawns a second process, which breaks bundles.
+        app.run(debug=False, host=HOST, port=port)
     except KeyboardInterrupt:
         pass
+    except Exception:
+        _fatal("MarkItDown could not start its local server.")
