@@ -110,14 +110,14 @@ app = BUNDLE(
     name='MarkItDown.app',
     icon='MarkItDown.icns',
     bundle_identifier='com.markitdown.app',
-    version='0.42.1',
+    version='0.44.2',
     info_plist={
         'NSPrincipalClass': 'NSApplication',
         'NSHighResolutionCapable': True,
         'LSBackgroundOnly': False,
         'NSHumanReadableCopyright': 'MarkItDown Local — MIT License',
-        'CFBundleShortVersionString': '0.42.1',
-        'CFBundleVersion': '421',
+        'CFBundleShortVersionString': '0.44.2',
+        'CFBundleVersion': '442',
         'LSMinimumSystemVersion': '12.0',
     },
 )

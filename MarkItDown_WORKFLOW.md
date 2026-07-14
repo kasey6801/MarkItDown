@@ -6,7 +6,7 @@
 
 **MarkItDown Local Frontend** is a local web app that converts documents to Markdown using Microsoft's [MarkItDown](https://github.com/microsoft/markitdown) library. It accepts PDF, DOCX, PPTX, XLSX, XLS, EPUB, CSV, JSON, XML, HTML, ZIP, images, audio, and URLs (including YouTube transcripts), with a 100 MB upload limit. All conversion happens on the user's machine; no file or URL is sent to an external server.
 
-The app is a single Python file (`app.py`, ~1,300 lines): a Flask backend plus the entire HTML/CSS/JS interface embedded as one string constant, with `marked.js` inlined for offline preview rendering. Files are converted in memory (`BytesIO`), never written to disk. A heartbeat/watchdog pair shuts the server down automatically when the browser tab closes. The app is packaged with PyInstaller as a macOS `.app`/`.dmg` (built locally by `build.sh`) and a Windows `.exe` (built by GitHub Actions, smoke-tested in CI before release). Current releases: macOS v0.42.1 (ships app v0.42.1), Windows v0.44.1 (ships app v0.44.1). `APP_VERSION` in `app.py` is the single source of truth for the app version.
+The app is a single Python file (`app.py`, ~1,300 lines): a Flask backend plus the entire HTML/CSS/JS interface embedded as one string constant, with `marked.js` inlined for offline preview rendering. Files are converted in memory (`BytesIO`), never written to disk. A heartbeat/watchdog pair shuts the server down automatically when the browser tab closes. The app is packaged with PyInstaller as a macOS `.app`/`.dmg` (built locally by `build.sh`) and a Windows `.exe` (built by GitHub Actions, smoke-tested in CI before release). Current release: v0.44.2, carrying both the macOS `.dmg` and Windows `.exe` (both ship app v0.44.2). `APP_VERSION` in `app.py` is the single source of truth for the app version.
 
 ---
 
@@ -145,13 +145,24 @@ Prompts below are reconstructed from commit history; the original session transc
 - `convert_file` and `convert_url` now catch `BaseException` (re-raising `KeyboardInterrupt`/`SystemExit`), because markitdown's `UnsupportedFormatException`/`FileConversionException` subclass `BaseException` and previously escaped the `except Exception` guards, crashing the request thread on any unsupported or corrupt file. They now return the 500 JSON error the UI displays
 - Bumped the app and Windows version resource to v0.44.1 and released the Windows build as v0.44.1
 
+### Step 14: Serving address in the header, unified v0.44.2 release (2026-07-14)
+
+**User prompts:**
+> Under the version number I want the IP address and port in use displayed. [...] I want the version beside the ip address information, separated by a |
+> push to github as the latest release.
+
+**Claude actions:**
+- Added the serving `host:port` beside the version in the header (`index()` passes `request.host` to the template, HTML-escaped via Jinja autoescaping), shown as e.g. `v0.44.2 | 127.0.0.1:5001`. The value reflects the actual bound port, including the 5001-5010 fallback
+- Bumped the app version, Windows version resource, and macOS spec to v0.44.2
+- Cut v0.44.2 as the Latest release carrying both platforms: the Windows `.exe` via the CI build-and-smoke-test pipeline, and the macOS `.dmg` built locally with `build.sh` and attached to the same release. This unified the previously split per-platform versions (macOS had been v0.42.1, Windows v0.44.1)
+
 ---
 
 ## User Guide
 
 ### Install (macOS, recommended)
 
-1. Download `MarkItDown.dmg` from the [v0.42.1 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.42.1).
+1. Download `MarkItDown.dmg` from the [v0.44.2 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.2).
 2. Drag **MarkItDown.app** into **Applications**, then eject the DMG.
 3. First launch only: right-click the app, choose **Open**, then click **Open** (the app is not signed with an Apple Developer ID).
 4. The browser opens `http://127.0.0.1:5001` automatically.

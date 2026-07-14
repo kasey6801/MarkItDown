@@ -70,10 +70,10 @@ Both use `upx=False` — UPX corrupts Python extension modules (`.dylib`/`.pyd`)
 
 ## Releasing
 
-- macOS releases (`MarkItDown.dmg`) are built locally with `bash build.sh` and attached to the GitHub release manually. Current macOS release: **v0.42.1**.
-- Windows releases (`MarkItDown.exe`) are built automatically by GitHub Actions on tag push. The workflow smoke-tests the built EXE (launches it, converts a sample file over HTTP, verifies clean shutdown) before uploading; a broken EXE never reaches a release. The workflow creates the release if it doesn't exist, then uploads the EXE. Current Windows release: **v0.44.1**.
+- macOS releases (`MarkItDown.dmg`) are built locally with `bash build.sh` and attached to the GitHub release manually. Current macOS release: **v0.44.2**.
+- Windows releases (`MarkItDown.exe`) are built automatically by GitHub Actions on tag push. The workflow smoke-tests the built EXE (launches it, converts a sample file over HTTP, verifies clean shutdown) before uploading; a broken EXE never reaches a release. The workflow creates the release if it doesn't exist, then uploads the EXE. Current Windows release: **v0.44.2**.
 - To trigger a Windows release: `git tag vX.Y.Z && git push origin vX.Y.Z`
-- The app version is defined by `APP_VERSION` in `app.py` (single source of truth; the header `Version:` line and `windows_version_info.txt` must be kept in sync, and the UI receives it via Jinja). Release tags are per-platform packaging events and may differ from the app version (the macOS v0.42.1 release ships app v0.42.1; the Windows v0.44.1 release ships app v0.44.1).
+- The app version is defined by `APP_VERSION` in `app.py` (single source of truth; the header `Version:` line and `windows_version_info.txt` must be kept in sync, and the UI receives it via Jinja). A release tag is a packaging event and may carry either or both platform artifacts (the v0.44.2 release carries both the macOS `.dmg` and Windows `.exe`, both shipping app v0.44.2).
 
 ## Documentation Standard
 
