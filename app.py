@@ -691,7 +691,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
       </div>
       <div class="actions">
         <button class="action-btn" id="copy-btn"     onclick="copyMarkdown()">📋 Copy</button>
-        <button class="action-btn" id="download-btn" onclick="downloadMarkdown()">⬇ Download</button>
+        <button class="action-btn" id="download-btn" onclick="downloadMarkdown()" title="Save the converted Markdown as a .md file on your computer">💾 Save as .md</button>
       </div>
     </div>
   </div>
