@@ -321,9 +321,6 @@ if(__exports != exports)module.exports = exports;return module.exports}));
     }
     #address {
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 0.72rem;
-      margin-top: 2px;
-      opacity: 0.4;
     }
 
     /* ── Shared card wrapper ── */
@@ -609,8 +606,7 @@ if(__exports != exports)module.exports = exports;return module.exports}));
   <button id="quit-btn" onclick="quitApp()">Quit</button>
   <h1>⚡ MarkItDown</h1>
   <p>Convert documents, PDFs, Office files &amp; more to Markdown — locally.</p>
-  <p id="version">{{ version }}</p>
-  <p id="address">{{ address }}</p>
+  <p id="version">{{ version }} | <span id="address">{{ address }}</span></p>
 </header>
 
 <!-- ═══════════════════════════════════════════════════
