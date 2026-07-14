@@ -1,7 +1,7 @@
 """
 MarkItDown Local Frontend
 =========================
-Version: v0.44.2
+Version: v0.44.3
 
 A self-contained Flask web application that provides a browser-based UI
 for Microsoft's MarkItDown library (https://github.com/microsoft/markitdown).
@@ -156,7 +156,7 @@ md_converter = MarkItDown()
 # Single source of truth for the displayed app version. Keep the "Version:"
 # line in this file's header in sync. The HTML shows it via Jinja injection
 # in index(); windows_version_info.txt mirrors it for the Windows EXE resource.
-APP_VERSION = "v0.44.2"
+APP_VERSION = "v0.44.3"
 
 # ---------------------------------------------------------------------------
 # HTML / CSS / JS — Single-file frontend

@@ -6,7 +6,7 @@
 
 **MarkItDown Local Frontend** is a local web app that converts documents to Markdown using Microsoft's [MarkItDown](https://github.com/microsoft/markitdown) library. It accepts PDF, DOCX, PPTX, XLSX, XLS, EPUB, CSV, JSON, XML, HTML, ZIP, images, audio, and URLs (including YouTube transcripts), with a 100 MB upload limit. All conversion happens on the user's machine; no file or URL is sent to an external server.
 
-The app is a single Python file (`app.py`, ~1,300 lines): a Flask backend plus the entire HTML/CSS/JS interface embedded as one string constant, with `marked.js` inlined for offline preview rendering. Files are converted in memory (`BytesIO`), never written to disk. A heartbeat/watchdog pair shuts the server down automatically when the browser tab closes. The app is packaged with PyInstaller as a macOS `.app`/`.dmg` (built locally by `build.sh`) and a Windows `.exe` (built by GitHub Actions, smoke-tested in CI before release). Current release: v0.44.2, carrying both the macOS `.dmg` and Windows `.exe` (both ship app v0.44.2). `APP_VERSION` in `app.py` is the single source of truth for the app version.
+The app is a single Python file (`app.py`, ~1,300 lines): a Flask backend plus the entire HTML/CSS/JS interface embedded as one string constant, with `marked.js` inlined for offline preview rendering. Files are converted in memory (`BytesIO`), never written to disk. A heartbeat/watchdog pair shuts the server down automatically when the browser tab closes. The app is packaged with PyInstaller as a macOS `.app`/`.dmg` (built locally by `build.sh`) and a Windows `.exe` (built by GitHub Actions, smoke-tested in CI before release). Current release: v0.44.3, carrying both the macOS `.dmg` and Windows `.exe` (both ship app v0.44.3). `APP_VERSION` in `app.py` is the single source of truth for the app version.
 
 ---
 
@@ -156,13 +156,23 @@ Prompts below are reconstructed from commit history; the original session transc
 - Bumped the app version, Windows version resource, and macOS spec to v0.44.2
 - Cut v0.44.2 as the Latest release carrying both platforms: the Windows `.exe` via the CI build-and-smoke-test pipeline, and the macOS `.dmg` built locally with `build.sh` and attached to the same release. This unified the previously split per-platform versions (macOS had been v0.42.1, Windows v0.44.1)
 
+### Step 15: "Save as .md" button label, v0.44.3 release (2026-07-14)
+
+**User prompts:**
+> Markitdown interface: When a document is converted, a button labled "Download" with a down arrow is displayed. This is actually an option to save the file, not download from a different source. Suggest options for changing the label used for this button
+> push to github and update the releas package
+
+**Claude actions:**
+- Relabeled the output-card save button from `⬇ Download` to `💾 Save as .md` with a clarifying tooltip. The button saves the converted Markdown locally (browser blob + download link, no server fetch), so "Download" was misleading; the underlying mechanism was left unchanged per the user's choice
+- Bumped the app version, Windows version resource, and macOS spec to v0.44.3, then released v0.44.3 as the Latest release carrying both platforms (Windows `.exe` via CI, macOS `.dmg` built locally and attached)
+
 ---
 
 ## User Guide
 
 ### Install (macOS, recommended)
 
-1. Download `MarkItDown.dmg` from the [v0.44.2 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.2).
+1. Download `MarkItDown.dmg` from the [v0.44.3 release](https://github.com/kasey6801/MarkItDown/releases/tag/v0.44.3).
 2. Drag **MarkItDown.app** into **Applications**, then eject the DMG.
 3. First launch only: right-click the app, choose **Open**, then click **Open** (the app is not signed with an Apple Developer ID).
 4. The browser opens `http://127.0.0.1:5001` automatically.
